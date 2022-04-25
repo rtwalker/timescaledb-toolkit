@@ -8,10 +8,11 @@ use encodings::{delta, prefix_varint};
 use uddsketch::{SketchHashKey, UDDSketch as UddSketchInternal};
 
 use crate::{
+    accessors::toolkit_experimental,
     aggregate_utils::in_aggregate_context,
     flatten,
-    palloc::{Internal, InternalAsValue, Inner, ToInternal}, pg_type,
-    accessors::toolkit_experimental,
+    palloc::{Inner, Internal, InternalAsValue, ToInternal},
+    pg_type, test_data,
 };
 
 // PG function for adding values to a sketch.
@@ -904,14 +905,57 @@ mod tests {
     fn test_udd_null_input_yields_null_output() {
         Spi::execute(|client| {
             let output = client
+                .select("SELECT uddsketch(20, 0.01, NULL)::TEXT", None, None)
+                .first()
+                .get_one::<String>();
+            assert_eq!(output, None)
+        })
+    }
+
+    #[pg_test]
+    fn issue_396() {
+        let data = test_data::ISSUE396;
+
+        let expected = "(\
+            version:1,\
+            alpha:0.07983241894211353,\
+            max_buckets:100,\
+            num_buckets:65,\
+            compactions:3,\
+            count:854677,\
+            sum:5544831515169,\
+            buckets:[\
+	        (Zero,431887),(Positive(0),4992),(Positive(5),6329),(Positive(7),7182),(Positive(9),6613),\
+                (Positive(11),5751),(Positive(12),4898),(Positive(13),8377),(Positive(14),3530),(Positive(15),6486),\
+                (Positive(16),3318),(Positive(17),12585),(Positive(18),11782),(Positive(19),28298),\
+                (Positive(20),53315),(Positive(21),59086),(Positive(22),57653),(Positive(23),39775),\
+                (Positive(24),24898),(Positive(25),16114),(Positive(26),12421),(Positive(27),8371),\
+                (Positive(28),7167),(Positive(29),5217),(Positive(30),4467),(Positive(31),3700),(Positive(32),2797),\
+                (Positive(33),2368),(Positive(34),2138),(Positive(35),1662),(Positive(36),1507),(Positive(37),1271),\
+                (Positive(38),1241),(Positive(39),991),(Positive(40),896),(Positive(41),637),(Positive(42),589),\
+                (Positive(43),407),(Positive(44),477),(Positive(45),417),(Positive(46),334),(Positive(47),282),\
+                (Positive(48),226),(Positive(49),222),(Positive(50),155),(Positive(51),115),(Positive(52),139),\
+                (Positive(53),34),(Positive(54),62),(Positive(55),27),(Positive(56),7),(Positive(57),35),\
+                (Positive(58),34),(Positive(59),6),(Positive(60),14),(Positive(61),7),(Positive(62),14),\
+                (Positive(63),14),(Positive(64),14),(Positive(66),7),(Positive(68),7),(Positive(73),7),\
+                (Positive(76),7),(Positive(78),7),(Positive(139),1291)\
+                ]\
+            )";
+
+        Spi::execute(|client| {
+            let sketch = client
                 .select(
-                    "SELECT uddsketch(20, 0.01, NULL)::TEXT",
+                    &format!(
+                        "SELECT uddsketch(100, 0.01, n::float)::text FROM ({}) as v(n);",
+                        data
+                    ),
                     None,
                     None,
                 )
                 .first()
                 .get_one::<String>();
-            assert_eq!(output, None)
-        })
+
+            assert_eq!(sketch, Some(expected.into()));
+        });
     }
 }

@@ -26,6 +26,7 @@ mod stabilization_info;
 mod raw;
 mod datum_utils;
 mod pg_any_element;
+mod test_data;
 
 #[cfg(any(test, feature = "pg_test"))]
 mod aggregate_builder_tests;
