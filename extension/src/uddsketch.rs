@@ -914,7 +914,8 @@ mod tests {
 
     #[pg_test]
     fn issue_396() {
-        let data = test_data::ISSUE396;
+        let first_half_data = test_data::ISSUE396_PART1;
+        let second_half_data = test_data::ISSUE396_PART2;
 
         let expected = "(\
             version:1,\
@@ -946,8 +947,10 @@ mod tests {
             let sketch = client
                 .select(
                     &format!(
-                        "SELECT uddsketch(100, 0.01, n::float)::text FROM ({}) as v(n);",
-                        data
+                        "\
+                        SELECT uddsketch(100, 0.01, n::float)::text FROM (SELECT * FROM ({}) AS a(n) UNION ALL SELECT * FROM ({}) AS b(n)) AS v(n);",
+			first_half_data,
+			second_half_data,
                     ),
                     None,
                     None,
