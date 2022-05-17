@@ -14,7 +14,7 @@ on:
 jobs:
   clippy:
     name: Clippy Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     container:
       image: timescaledev/rust-pgx:latest
       env:
@@ -79,7 +79,7 @@ jobs:
 
   test12:
     name: Test PG 12
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     container:
       image: timescaledev/rust-pgx:latest
 
@@ -131,7 +131,7 @@ jobs:
 
   test13:
     name: Test PG 13
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     container:
       image: timescaledev/rust-pgx:latest
 
@@ -180,7 +180,7 @@ jobs:
 
   test14:
     name: Test PG 14
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     container:
       image: timescaledev/rust-pgx:latest
 
@@ -229,7 +229,7 @@ jobs:
 
   testcrates:
     name: Test Crates
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     container:
       image: timescaledev/rust-pgx:latest
       env:
@@ -270,7 +270,7 @@ jobs:
 
   testupdates:
     name: Test Updates
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     container:
       image: timescaledev/rust-pgx:latest
       env:
