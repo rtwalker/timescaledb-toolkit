@@ -81,11 +81,6 @@ while [ $# -gt 0 ]; do
             nop=:
             ;;
 
-        -pgconfig)
-            pg_config="$1"
-            shift
-            ;;
-
         -cargo-pgx)
             cargo_pgx="$1"
             shift
@@ -93,6 +88,11 @@ while [ $# -gt 0 ]; do
 
         -cargo-pgx-old)
             cargo_pgx_old="$1"
+            shift
+            ;;
+
+        -pgconfig)
+            pg_config="$1"
             shift
             ;;
 
@@ -107,6 +107,11 @@ while [ $# -gt 0 ]; do
             [ -z "$pg_port" ] && pg_port=288$pg_version
             ;;
 
+        -profile)
+            profile="--profile $1"
+            shift
+            ;;
+
         clippy)
             $nop env "CARGO_TARGET_DIR=$top_CARGO_TARGET_DIR" cargo fetch
             # We need to pick a postgres version to clippy the timescaledb_toolkit crate, but it doesn't matter which one.
@@ -116,22 +121,29 @@ while [ $# -gt 0 ]; do
         test-crates)
             # Should find no dependency crates to fetch.  If it finds any, we need to update the cache key.
             $nop env "CARGO_TARGET_DIR=$top_CARGO_TARGET_DIR" cargo fetch
-            $nop env "CARGO_TARGET_DIR=$top_CARGO_TARGET_DIR" cargo test --workspace --exclude timescaledb_toolkit
+            $nop env "CARGO_TARGET_DIR=$top_CARGO_TARGET_DIR" cargo test $profile --workspace --exclude timescaledb_toolkit
             ;;
 
         test-extension)
             cd extension
             require_pg_version
-            $nop env "CARGO_TARGET_DIR=$extension_CARGO_TARGET_DIR" cargo fetch
-            $nop env "CARGO_TARGET_DIR=$extension_CARGO_TARGET_DIR" cargo test --features "$pg pg_test" --no-default-features
+            (
+                export CARGO_TARGET_DIR="$extension_CARGO_TARGET_DIR"
+                $nop cargo fetch
+                $nop cargo test $profile --features "$pg pg_test" --no-default-features
+            )
             ;;
 
         install)
             cd extension
             require_pg_version
             find_pg_config
+            # TODO `cargo install` selects release profile by default; does `pgx install`?
             $nop env "CARGO_TARGET_DIR=$extension_CARGO_TARGET_DIR" cargo pgx install -c "$pg_config"
             ;;
+
+        # TODO Hard-code profile of (post-install, testrunner, sql-doctester,
+        # update-tester) tools based on which one is fastest to build + run.
 
         # Requires extension has been installed.  `install` or `test-extension` takes care of that.
         test-post-install)
