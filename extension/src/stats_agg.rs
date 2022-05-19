@@ -1527,7 +1527,7 @@ mod tests {
     }
 
     fn pg2d_agg(agg: &str) -> String {
-        format!("SELECT {}(test_y, test_x) FROM test_table", agg)
+        format!("SELECT {}(test_y, test_x ORDER BY test_y, test_x) FROM test_table", agg)
     }
 
     fn tk1d_agg(agg: &str) -> String {
@@ -1553,8 +1553,8 @@ mod tests {
 
     fn tk2d_agg_arg(agg: &str, arg: &str) -> String {
         format!("SELECT \
-            {agg}(stats_agg(test_y, test_x), '{arg}'), \
-            stats_agg(test_y, test_x)->toolkit_experimental.{agg}('{arg}') \
+            {agg}(stats_agg(test_y, test_x ORDER BY test_y, test_x), '{arg}'), \
+            stats_agg(test_y, test_x ORDER BY test_y, test_x)->toolkit_experimental.{agg}('{arg}') \
         FROM test_table", agg=agg, arg=arg)
     }
 
